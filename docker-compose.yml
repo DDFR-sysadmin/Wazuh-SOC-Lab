@@ -27,7 +27,7 @@ services:
       - SSL_CERTIFICATE=/etc/ssl/filebeat.pem
       - SSL_KEY=/etc/ssl/filebeat.key
       - API_USERNAME=wazuh-wui
-      - API_PASSWORD=MyS3cr37P450r.*-
+      - API_PASSWORD=${MANAGER_API_PASSWORD}
     volumes:
       - ./wazuh_data/wazuh_api_configuration:/var/ossec/api/configuration
       - ./wazuh_data/wazuh_etc:/var/ossec/etc
@@ -83,7 +83,7 @@ services:
       - DASHBOARD_USERNAME=kibanaserver
       - DASHBOARD_PASSWORD=kibanaserver
       - API_USERNAME=wazuh-wui
-      - API_PASSWORD=MyS3cr37P450r.*-
+      - API_PASSWORD=${MANAGER_API_PASSWORD}
     volumes:
       - ./config/wazuh_indexer_ssl_certs/wazuh.dashboard.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard.pem
       - ./config/wazuh_indexer_ssl_certs/wazuh.dashboard-key.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard-key.pem
@@ -99,17 +99,5 @@ services:
       - wazuh.manager:wazuh.manager
 
 volumes:
-#  wazuh_api_configuration:
-#  wazuh_etc:
-#  wazuh_logs:
-#  wazuh_queue:
-#  wazuh_var_multigroups:
-#  wazuh_integrations:
-#  wazuh_active_response:
-#  wazuh_agentless:
-#  wazuh_wodles:
-#  filebeat_etc:
-#  filebeat_var:
   wazuh-indexer-data:
-#  wazuh-dashboard-config:
-#  wazuh-dashboard-custom:
+
