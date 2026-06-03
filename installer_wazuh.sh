@@ -1,11 +1,11 @@
 #!/bin/bash
 sudo apt update && sudo apt upgrade -y
-#sudo apt install -y git curl apt-transport-https ca-certificates gnupg lsb-release
+sudo apt install -y git curl apt-transport-https ca-certificates gnupg lsb-release
 sudo mkdir -p /etc/apt/keyrings
-#curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-#echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
-#sudo apt update
-#sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 
 git clone https://github.com/wazuh/wazuh-docker.git -b v4.9.0
@@ -23,7 +23,7 @@ echo "         Настройка безопасности Wazuh SOC Lab        
 echo "========================================================="
 echo ""
 
-# 1. Запрос пароля администратора с маскировкой ввода и проверкой совпадения
+# Запрос пароля администратора с маскировкой ввода и проверкой совпадения
 while true; do
     read -s -p "Введите новый пароль для панели управления (Wazuh Admin): " WAZUH_PASS
     echo ""
@@ -48,7 +48,7 @@ echo "[+] Пароль принят."
 
 
 
-# 3. Создание файла .env (переменные окружения)
+# Создание файла .env (переменные окружения)
 cat << EOF > .env
 # Секреты лабораторного окружения Wazuh
 INDEXER_PASSWORD=${WAZUH_PASS}
@@ -57,17 +57,17 @@ EOF
 chmod 600 .env
 echo "[+] Файл .env успешно создан и защищен правами доступа."
 
-# 4. Замена жестко прописанных паролей в docker-compose.yml на переменные
+# Замена жестко прописанных паролей в docker-compose.yml на переменные
 # Меняем дефолтный SecretPassword на переменную индоксера
 sed -i 's/INDEXER_PASSWORD=SecretPassword/INDEXER_PASSWORD=${INDEXER_PASSWORD}/g' docker-compose.yml
 
 echo "[+] Конфигурация docker-compose.yml переведена на безопасные переменные."
 
-# 5. Генерация Bcrypt хэша для СУБД с помощью родного контейнера Wazuh Indexer
+# Генерация Bcrypt хэша для СУБД с помощью родного контейнера Wazuh Indexer
 echo "[*] Генерация криптографического хэша для базы данных (это займет пару секунд)..."
 # Запускаем контейнер в рантайме только ради одной встроенной утилиты хэширования
 HASH=$(sudo docker run --rm -e JAVA_HOME=/usr/share/wazuh-indexer/jdk --entrypoint /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh wazuh/wazuh-indexer:4.9.0 -p "$WAZUH_PASS" | tail -n 1 | tr -d '\r')
-# 6. Безопасная подстановка хэша в internal_users.yml через Python (чтобы не сломать YAML синтаксис)
+# Безопасная подстановка хэша в internal_users.yml через Python (чтобы не сломать YAML синтаксис)
 export NEW_HASH="$HASH"
 python3 -c '
 import os, re
@@ -108,13 +108,10 @@ echo "         Настройка конфигурации Wazuh Manager        
 echo "========================================================="
 echo ""
 
-# 1. Ссылка на RAW-файл твоей конфигурации
+# Ссылка на RAW-файл конфигурации
 OSSEC_RAW_URL="https://raw.githubusercontent.com/DDFR-sysadmin/Wazuh-SOC-Lab/main/configs/ossec.conf"
 
-# 2. Превентивно создаем структуру папок для рабочей директории, чтобы curl не упал
-mkdir -p ./wazuh_data/wazuh_etc
-
-# 3. Скачиваем конфиг в шаблон кластера (откуда его заберет докер при инициализации)
+# Скачиваем конфиг в шаблон кластера (откуда его заберет докер при инициализации)
 if curl -sSL "$OSSEC_RAW_URL" -o ./config/wazuh_cluster/wazuh_manager.conf; then
     echo "[+] Шаблон конфигурации ./config/wazuh_cluster/wazuh_manager.conf успешно заменен."
 else
@@ -127,4 +124,5 @@ echo "========================================================="
 # КОНЕЦ БЛОКА ИНТЕГРАЦИИ КАСТОМНОГО OSSEC.CONF
 # ====================================================================
 
+# Поднимаем сам контейнер
 sudo docker compose up -d
